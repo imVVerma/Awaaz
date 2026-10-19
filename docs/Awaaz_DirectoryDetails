@@ -1,0 +1,304 @@
+# Awaaz Project: Repository Organization, Architecture Discovery & Frontend Assessment
+
+## Context
+
+I am developing **Awaaz**, a voice-first business operations assistant for the Great Indian AI Internship Challenge by Gnani AI.
+
+The existing project is MediDist, a medicine inventory and distributor management application. It already has a React Native Expo frontend, an Express + TypeScript backend, and a SQLite database.
+
+Prisma speech-to-text and Timbre text-to-speech have been tested independently and work as expected. Their integration into this application has not yet been implemented.
+
+Read these existing documents before proceeding:
+
+- `AWAAZ_CODEBASE_AUDIT.md`
+- `AWAAZ_CLEANUP_REPORT.md`
+
+Use them as historical references, not unquestionable ground truth. Inspect the current files and verify all important claims against the actual code.
+
+## Objective
+
+First organize the overall Gnani project directory. Then produce a detailed, evidence-based report describing:
+
+1. The current repository and directory structure.
+2. How to run and access the frontend and backend.
+3. What the existing application actually does.
+4. How its database, API routes, business logic, and frontend components work together.
+5. Whether the current frontend can be repaired and adapted for Awaaz.
+6. What Awaaz's interface should contain, what already exists, what is missing, and precisely where changes would be required.
+
+**This is a discovery and planning task. Do not start implementing Awaaz features or redesigning the interface.**
+
+---
+
+## Phase 1: Establish the workspace and organize the Gnani project directory
+
+The intended workspace is:
+
+`c:\Users\Vaibhav Verma\Documents\VV-Plak\Gnani\`
+
+Inspect this directory and all relevant subdirectories before moving or renaming anything.
+
+1. Identify the actual MediDist project root and confirm where `package.json`, `server/`, `client/`, `data/`, and the cleanup report are located.
+2. Inventory all top-level files, directories, nested projects, documentation, scripts, assets, and generated files.
+3. Identify duplicate folders, old snapshots, unrelated files, temporary artifacts, and misplaced documentation.
+4. Propose a clean, understandable directory structure for the Gnani workspace.
+
+The intended organization should make it easy to distinguish:
+
+- `Med-Inventory/`: the existing application source code.
+- `docs/`: project audits, architecture reports, requirements, and planning documents.
+- Other folders only when justified by actual project needs.
+
+Use judgment rather than forcing this exact structure if the current layout suggests a better alternative.
+
+### Safety requirements
+
+- Do not delete or overwrite source code, project assets, user documents, or database files.
+- Do not move files that are referenced by build scripts, runtime configuration, or deployment workflows without verifying and updating those references.
+- Preserve `data/inventory.db` and any SQLite WAL/shared-memory files. Do not manipulate them while the database may be running.
+- Do not expose, print, or copy secrets from `.env` files or other configuration.
+- Inspect `.gitignore` and exclude secrets, caches, generated output, and private database files from future version control as appropriate.
+- Do not initialize Git, create a GitHub repository, commit changes, or push anything. I will handle Git initialization myself in the correct project directory.
+- Do not install or remove dependencies during this pass.
+- Avoid unnecessary changes to Replit configuration, build scripts, and deployment files.
+- Before moving files, check for naming conflicts and dependencies.
+- If a change is risky or its purpose is unclear, leave the file in place and document it.
+
+Make only safe organizational changes whose purpose and impact are clear. Record all moves, renames, and other modifications.
+
+---
+
+## Phase 2: Discover how the application currently runs
+
+Inspect `package.json`, all relevant configuration files, scripts, and application entry points.
+
+Determine the exact commands needed to:
+
+1. Install dependencies, if needed.
+2. Start the backend by itself.
+3. Start the frontend by itself.
+4. Start both together, if supported.
+5. Build the frontend and backend.
+6. Run TypeScript, lint, and formatting checks.
+
+Do not assume that the scripts documented in previous reports still exist or behave as described.
+
+For each development command, explain:
+
+- Which directory I should open in the terminal.
+- The exact command to run.
+- Whether another terminal is required.
+- Which port the service listens on.
+- The URL I should open in my browser.
+- Whether the frontend requires Expo Go, a browser, a mobile emulator, or another tool.
+- How the frontend discovers and connects to the backend.
+- How to stop the running processes safely.
+
+Verify the commands from the actual scripts. Where practical, start the services and confirm the listening ports and available routes. Do not start duplicate servers on occupied ports or disrupt an existing running process.
+
+If something cannot be verified, clearly label it as unverified rather than guessing.
+
+---
+
+## Phase 3: Map the current architecture and business logic
+
+Inspect the actual source files and document the following.
+
+### A. Frontend
+
+Identify:
+
+- Framework, versions, entry points, navigation, and screen registration.
+- Every screen and its purpose.
+- Reusable components, layout, theme, styles, and UI conventions.
+- Forms, tables or lists, loading states, error states, and empty states.
+- API client configuration and query/data-fetching mechanisms.
+- Existing upload, import, search, and reporting interfaces.
+- Responsive behavior and differences between web and native platforms.
+- Current microphone/audio support, if any.
+
+Trace the main user flows from screen interaction to API call. Cite the relevant file paths and functions.
+
+### B. Backend
+
+Identify:
+
+- Server entry point, middleware, CORS, error handling, and static-file serving.
+- All API routes, HTTP methods, request parameters, response structures, and their purposes.
+- Database initialization and connection lifecycle.
+- Existing product, company, inventory transaction, low-stock, expiry, upload/import, and report logic.
+- File upload processing, PDF extraction, and Groq-based document extraction, if present.
+- Validation, error handling, and security assumptions.
+- Any unused, duplicated, or disconnected modules.
+
+Do not expose credentials, secrets, or sensitive production records in the report.
+
+### C. Database and domain model
+
+Inspect the current SQLite schema and the code that reads or modifies it.
+
+Document:
+
+- Tables and their relationships.
+- Important fields and constraints.
+- How stock levels, minimum stock, expiry dates, and inventory transactions are represented.
+- How dashboard and reporting totals are calculated.
+- Whether calculations are stored or derived at query time.
+- How product and company identifiers flow through the application.
+
+Use schema definitions and source code as evidence. If useful, inspect aggregate counts, but do not include private business records or sensitive row-level data in the report.
+
+### D. External services and configuration
+
+Identify the external services actually used by the current application, their call sites, and configuration requirements.
+
+Distinguish clearly between:
+
+- Existing, working application integrations.
+- Configured but unverified integrations.
+- Proposed Awaaz integrations that do not exist yet.
+
+Do not print API keys or secret environment-variable values.
+
+---
+
+## Phase 4: Assess the frontend against Awaaz's requirements
+
+Do not assume that a new frontend is necessary. Assess the existing Expo frontend first.
+
+The proposed Awaaz MVP should support these workflows:
+
+1. Ask which products are low in stock and receive an answer grounded in the existing inventory database.
+2. Ask which customers have outstanding balances and receive a verified answer.
+3. Draft a payment reminder using verified customer and balance information, allowing the user to review and copy it.
+4. Speak a request and review its transcription before executing a business query.
+5. Hear the response through Timbre, with readable text as a fallback.
+6. Clarify ambiguous product or customer names rather than guessing.
+7. Show clear processing, confirmation, error, and empty states.
+
+The outstanding-balance and payment-reminder workflows do not exist merely because inventory workflows exist. Verify them in the current source.
+
+### Produce a feature-by-feature gap analysis
+
+For each requirement, classify it as:
+
+- **Existing and verified**
+- **Partially implemented**
+- **Missing**
+- **Unknown or not verified**
+
+For every partially implemented or missing feature, identify:
+
+- Relevant existing file paths and functions.
+- Which frontend components could be reused.
+- Which frontend screens/components need changes.
+- Which backend routes or business logic need changes.
+- Whether a database change is required.
+- Dependencies or technical risks.
+- A recommended implementation approach.
+
+### Evaluate two architectural options
+
+**Option A: Repair and extend the existing Expo frontend.**
+
+Assess whether its current web support, navigation, component system, and API client can support a browser-based voice interface using standard browser audio APIs where appropriate.
+
+**Option B: Build a separate React + Vite web frontend.**
+
+Assess the additional work, advantages, disadvantages, and integration requirements if the existing Express + SQLite backend is retained.
+
+Compare both options on:
+
+- Time to implement.
+- Amount of code reuse.
+- Browser microphone/audio compatibility.
+- Deployment complexity.
+- Risk of breaking existing MediDist functionality.
+- Maintainability after the challenge.
+
+Recommend one option based on evidence from the codebase. Do not implement either option yet.
+
+---
+
+## Phase 5: Propose the Awaaz interface
+
+Describe a practical interface for a solo developer to build within the challenge deadline.
+
+Consider a simple primary workspace with:
+
+- A clear microphone/voice input control.
+- A visible, editable transcription.
+- A readable answer or result card.
+- Relevant business data, such as product names, stock quantities, customer balances, and dates.
+- A spoken-response control or playback status.
+- A payment-reminder draft with a copy action.
+- A small area for processing status and understandable errors.
+- A text-input fallback if microphone access is unavailable.
+
+Do not add dashboards, animations, elaborate settings, or extra features without a clear purpose.
+
+Compare the proposed interface against the existing screens and reusable components. Identify what should be retained, simplified, repurposed, added, or removed from the main Awaaz experience.
+
+Keep existing MediDist screens available unless there is a verified reason to change them.
+
+---
+
+## Phase 6: Produce the reports
+
+Create the following Markdown documents in the agreed documentation directory. If that directory does not exist, create it only after confirming the proposed location is safe.
+
+### 1. `AWAAZ_PROJECT_DISCOVERY_REPORT.md`
+
+This is the main deliverable. Include:
+
+1. Executive summary.
+2. Verified workspace and repository structure.
+3. Exact commands to run and access the frontend and backend.
+4. Frontend architecture and screen inventory.
+5. Backend architecture and API route inventory.
+6. Database schema and business logic.
+7. External services and configuration requirements.
+8. Existing functionality and verification evidence.
+9. Awaaz feature gap matrix.
+10. Existing frontend versus separate Vite frontend comparison.
+11. Recommended Awaaz interface and component reuse plan.
+12. File-by-file patchwork plan, ordered by implementation phase.
+13. Risks, assumptions, and unresolved questions.
+14. Validation commands and results.
+15. Suggested next steps.
+
+### 2. `AWAAZ_DIRECTORY_ORGANIZATION_REPORT.md`
+
+Include:
+
+- Before-and-after directory structure.
+- Files/directories moved, renamed, or otherwise modified.
+- Why each organizational change was made.
+- References and configuration checked before making changes.
+- Files deliberately retained and why.
+- Items left untouched because their purpose was unclear.
+- Confirmation that database files, assets, and secrets were preserved and not exposed.
+- Any remaining directory organization recommendations.
+
+Do not claim a change was made or a test passed unless you actually verified it.
+
+---
+
+## Phase 7: Final validation and stop condition
+
+After organizational changes:
+
+- Confirm the application root and key source directories are intact.
+- Confirm database files remain present and were not reset.
+- Run the available TypeScript, formatting, and lint checks.
+- If practical, verify the frontend and backend start commands.
+- Confirm the report files exist in the intended location.
+- List all remaining issues and any checks that could not be performed.
+
+### Strict stop condition
+
+**Stop after repository organization, architecture discovery, frontend assessment, and report creation.**
+
+Do not implement voice routes, Prisma/Timbre clients, new database tables, synthetic customer data, payment-reminder logic, or UI redesigns. Do not replace the existing frontend. Do not initialize Git.
+
+The deliverable is an organized project and an accurate, actionable understanding of what currently exists and exactly where Awaaz development should begin.
