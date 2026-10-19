@@ -4,7 +4,7 @@ import { Feather } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Shadows, Colors } from "@/constants/theme";
-import type { ProductWithCompany } from "@shared/types";
+import type { ProductWithCompany, ProductBatch } from "@shared/types";
 
 interface ProductListItemProps {
   product: ProductWithCompany;
@@ -24,16 +24,61 @@ export function ProductListItem({
   showActions = true,
 }: ProductListItemProps) {
   const { theme, isDark } = useTheme();
+  const [showBatches, setShowBatches] = React.useState(false);
 
-  const isLowStock = product.stock_quantity <= product.minimum_stock_level;
-  const isCriticalStock = product.stock_quantity === 0;
+  const todayStr = React.useMemo(
+    () => new Date().toISOString().split("T")[0],
+    [],
+  );
+  const threeMonthsStr = React.useMemo(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 3);
+    return d.toISOString().split("T")[0];
+  }, []);
 
-  const expiryDate = new Date(product.expiry_date);
-  const today = new Date();
-  const threeMonthsFromNow = new Date();
-  threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
-  const isExpiringSoon = expiryDate <= threeMonthsFromNow && expiryDate > today;
-  const isExpired = expiryDate <= today;
+  const batches: ProductBatch[] = React.useMemo(
+    () => product.batches || [],
+    [product.batches],
+  );
+
+  // Calculate sellable vs expired stock quantities
+  const { sellableStock, expiredStock } = React.useMemo(() => {
+    if (batches.length > 0) {
+      let sellable = 0;
+      let expired = 0;
+      for (const b of batches) {
+        if (b.expiry_date <= todayStr) {
+          expired += b.current_quantity;
+        } else {
+          sellable += b.current_quantity;
+        }
+      }
+      return { sellableStock: sellable, expiredStock: expired };
+    }
+    const isSingleExpired = product.expiry_date <= todayStr;
+    return {
+      sellableStock: isSingleExpired ? 0 : product.stock_quantity,
+      expiredStock: isSingleExpired ? product.stock_quantity : 0,
+    };
+  }, [batches, product.expiry_date, product.stock_quantity, todayStr]);
+
+  const isCriticalStock = sellableStock === 0;
+  const isLowStock =
+    !isCriticalStock && sellableStock <= product.minimum_stock_level;
+
+  const hasExpiringBatches = React.useMemo(() => {
+    if (batches.length > 0) {
+      return batches.some(
+        (b) =>
+          b.expiry_date > todayStr &&
+          b.expiry_date <= threeMonthsStr &&
+          b.current_quantity > 0,
+      );
+    }
+    return (
+      product.expiry_date > todayStr && product.expiry_date <= threeMonthsStr
+    );
+  }, [batches, product.expiry_date, todayStr, threeMonthsStr]);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -55,24 +100,49 @@ export function ProductListItem({
         styles.container,
         {
           backgroundColor: theme.backgroundDefault,
-          opacity: pressed && onPress ? 0.8 : 1,
+          borderColor: theme.border,
+          borderWidth: 1,
+          opacity: pressed && onPress ? 0.85 : 1,
         },
       ]}
     >
       <View style={styles.content}>
         <View style={styles.mainInfo}>
-          <ThemedText
-            style={[styles.productName, { color: theme.text }]}
-            numberOfLines={1}
-          >
-            {product.product_name}
-          </ThemedText>
+          <View style={styles.nameHeaderRow}>
+            <ThemedText
+              style={[styles.productName, { color: theme.text }]}
+              numberOfLines={1}
+            >
+              {product.product_name}
+            </ThemedText>
+
+            {product.sku && (
+              <View
+                style={[
+                  styles.skuBadge,
+                  { backgroundColor: theme.backgroundSecondary },
+                ]}
+              >
+                <ThemedText
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "monospace",
+                    color: theme.textSecondary,
+                  }}
+                >
+                  {product.sku}
+                </ThemedText>
+              </View>
+            )}
+          </View>
+
           <ThemedText
             style={[styles.companyName, { color: theme.textSecondary }]}
             numberOfLines={1}
           >
             {product.company_name}
           </ThemedText>
+
           {product.composition && (
             <ThemedText
               style={[styles.composition, { color: theme.textSecondary }]}
@@ -86,12 +156,13 @@ export function ProductListItem({
         <View style={styles.metaInfo}>
           <View style={styles.metaRow}>
             <ThemedText style={[styles.label, { color: theme.textSecondary }]}>
-              Batch:
+              Latest Lot:
             </ThemedText>
             <ThemedText style={[styles.batchNumber, { color: theme.text }]}>
               {product.batch_number}
             </ThemedText>
           </View>
+
           <View style={styles.metaRow}>
             <ThemedText style={[styles.label, { color: theme.textSecondary }]}>
               MRP:
@@ -104,6 +175,7 @@ export function ProductListItem({
 
         <View style={styles.statusRow}>
           <View style={styles.badges}>
+            {/* Stock Level Badge */}
             {isCriticalStock ? (
               <View
                 style={[
@@ -116,7 +188,7 @@ export function ProductListItem({
                 ]}
               >
                 <ThemedText style={[styles.badgeText, { color: theme.danger }]}>
-                  Out of Stock
+                  Out of Sellable Stock
                 </ThemedText>
               </View>
             ) : isLowStock ? (
@@ -133,7 +205,7 @@ export function ProductListItem({
                 <ThemedText
                   style={[styles.badgeText, { color: theme.warning }]}
                 >
-                  Low Stock: {product.stock_quantity}
+                  Low Stock: {sellableStock} units
                 </ThemedText>
               </View>
             ) : (
@@ -150,12 +222,13 @@ export function ProductListItem({
                 <ThemedText
                   style={[styles.badgeText, { color: theme.success }]}
                 >
-                  Stock: {product.stock_quantity}
+                  Sellable: {sellableStock} units
                 </ThemedText>
               </View>
             )}
 
-            {isExpired ? (
+            {/* Expired Stock Isolation Badge */}
+            {expiredStock > 0 && (
               <View
                 style={[
                   styles.badge,
@@ -167,10 +240,13 @@ export function ProductListItem({
                 ]}
               >
                 <ThemedText style={[styles.badgeText, { color: theme.danger }]}>
-                  Expired
+                  Expired: {expiredStock}
                 </ThemedText>
               </View>
-            ) : isExpiringSoon ? (
+            )}
+
+            {/* Near Expiry Alert Badge */}
+            {hasExpiringBatches && (
               <View
                 style={[
                   styles.badge,
@@ -184,10 +260,48 @@ export function ProductListItem({
                 <ThemedText
                   style={[styles.badgeText, { color: theme.warning }]}
                 >
-                  Exp: {formatDate(product.expiry_date)}
+                  Expiring Soon
                 </ThemedText>
               </View>
-            ) : null}
+            )}
+
+            {/* Batch Count / Expansion Pill */}
+            {batches.length > 0 && (
+              <Pressable
+                onPress={() => setShowBatches(!showBatches)}
+                style={[
+                  styles.batchTogglePill,
+                  {
+                    backgroundColor: showBatches
+                      ? theme.primaryLight
+                      : theme.backgroundSecondary,
+                    borderColor: showBatches ? theme.primary : theme.border,
+                  },
+                ]}
+              >
+                <Feather
+                  name="layers"
+                  size={12}
+                  color={showBatches ? theme.primary : theme.textSecondary}
+                />
+                <ThemedText
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "600",
+                    marginLeft: 4,
+                    color: showBatches ? theme.primary : theme.textSecondary,
+                  }}
+                >
+                  {batches.length} {batches.length === 1 ? "Batch" : "Batches"}
+                </ThemedText>
+                <Feather
+                  name={showBatches ? "chevron-up" : "chevron-down"}
+                  size={12}
+                  color={showBatches ? theme.primary : theme.textSecondary}
+                  style={{ marginLeft: 2 }}
+                />
+              </Pressable>
+            )}
           </View>
 
           {showActions && (
@@ -200,8 +314,9 @@ export function ProductListItem({
                     { opacity: pressed ? 0.5 : 1 },
                   ]}
                   hitSlop={8}
+                  accessibilityLabel="Adjust Stock"
                 >
-                  <Feather name="refresh-cw" size={18} color={theme.info} />
+                  <Feather name="refresh-cw" size={17} color={theme.info} />
                 </Pressable>
               )}
               {onEdit && (
@@ -212,8 +327,9 @@ export function ProductListItem({
                     { opacity: pressed ? 0.5 : 1 },
                   ]}
                   hitSlop={8}
+                  accessibilityLabel="Edit Product"
                 >
-                  <Feather name="edit-2" size={18} color={theme.primary} />
+                  <Feather name="edit-2" size={17} color={theme.primary} />
                 </Pressable>
               )}
               {onDelete && (
@@ -224,13 +340,150 @@ export function ProductListItem({
                     { opacity: pressed ? 0.5 : 1 },
                   ]}
                   hitSlop={8}
+                  accessibilityLabel="Delete Product"
                 >
-                  <Feather name="trash-2" size={18} color={theme.danger} />
+                  <Feather name="trash-2" size={17} color={theme.danger} />
                 </Pressable>
               )}
             </View>
           )}
         </View>
+
+        {/* Expandable Batch-Level Disclosures */}
+        {showBatches && batches.length > 0 && (
+          <View
+            style={[
+              styles.batchesExpandedContainer,
+              {
+                backgroundColor: theme.backgroundSecondary,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <ThemedText
+              style={{
+                fontSize: 12,
+                fontWeight: "700",
+                textTransform: "uppercase",
+                color: theme.textSecondary,
+                marginBottom: Spacing.xs,
+              }}
+            >
+              Physical Lots & Batches Breakdown:
+            </ThemedText>
+
+            {batches.map((b) => {
+              const isLotExpired = b.expiry_date <= todayStr;
+              const isLotNearExpiry =
+                !isLotExpired && b.expiry_date <= threeMonthsStr;
+
+              return (
+                <View
+                  key={b.id}
+                  style={[
+                    styles.batchDetailRow,
+                    {
+                      backgroundColor: theme.backgroundDefault,
+                      borderColor: isLotExpired
+                        ? theme.danger
+                        : isLotNearExpiry
+                          ? theme.warning
+                          : theme.border,
+                    },
+                  ]}
+                >
+                  <View style={{ flex: 1 }}>
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <ThemedText
+                        style={{
+                          fontSize: 13,
+                          fontFamily: "monospace",
+                          fontWeight: "700",
+                          color: theme.text,
+                        }}
+                      >
+                        {b.batch_number}
+                      </ThemedText>
+                      {isLotExpired ? (
+                        <View
+                          style={[
+                            styles.miniBadge,
+                            {
+                              backgroundColor: isDark
+                                ? Colors.dark.dangerLight
+                                : Colors.light.dangerLight,
+                            },
+                          ]}
+                        >
+                          <ThemedText
+                            style={{
+                              fontSize: 10,
+                              color: theme.danger,
+                              fontWeight: "700",
+                            }}
+                          >
+                            EXPIRED
+                          </ThemedText>
+                        </View>
+                      ) : isLotNearExpiry ? (
+                        <View
+                          style={[
+                            styles.miniBadge,
+                            {
+                              backgroundColor: isDark
+                                ? Colors.dark.warningLight
+                                : Colors.light.warningLight,
+                            },
+                          ]}
+                        >
+                          <ThemedText
+                            style={{
+                              fontSize: 10,
+                              color: theme.warning,
+                              fontWeight: "700",
+                            }}
+                          >
+                            EXP SOON
+                          </ThemedText>
+                        </View>
+                      ) : null}
+                    </View>
+
+                    <ThemedText
+                      style={{
+                        fontSize: 12,
+                        color: theme.textSecondary,
+                        marginTop: 2,
+                      }}
+                    >
+                      Exp: {formatDate(b.expiry_date)} • Cost: ₹
+                      {b.purchase_price} • Sale: ₹{b.selling_price}
+                    </ThemedText>
+                  </View>
+
+                  <View style={{ alignItems: "flex-end" }}>
+                    <ThemedText
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "700",
+                        color: isLotExpired ? theme.textSecondary : theme.text,
+                      }}
+                    >
+                      {b.current_quantity} units
+                    </ThemedText>
+                    <ThemedText
+                      style={{ fontSize: 11, color: theme.textSecondary }}
+                    >
+                      MRP: ₹{b.mrp}
+                    </ThemedText>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
       </View>
     </Pressable>
   );
@@ -248,10 +501,22 @@ const styles = StyleSheet.create({
   mainInfo: {
     marginBottom: Spacing.md,
   },
+  nameHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 2,
+  },
   productName: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 2,
+    flex: 1,
+  },
+  skuBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.sm,
+    marginLeft: 8,
   },
   companyName: {
     fontSize: 13,
@@ -292,6 +557,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: Spacing.xs,
     flex: 1,
+    alignItems: "center",
   },
   badge: {
     paddingHorizontal: Spacing.sm,
@@ -302,12 +568,45 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "500",
   },
+  batchTogglePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+  },
   actions: {
     flexDirection: "row",
     gap: Spacing.md,
     marginLeft: Spacing.md,
   },
   actionButton: {
-    padding: Spacing.xs,
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  batchesExpandedContainer: {
+    marginTop: Spacing.md,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    gap: Spacing.xs,
+  },
+  batchDetailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+  },
+  miniBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
+    marginLeft: 6,
   },
 });

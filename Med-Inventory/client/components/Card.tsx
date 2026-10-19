@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Pressable, ViewStyle } from "react-native";
+import { StyleSheet, Pressable, ViewStyle, StyleProp } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -17,7 +17,8 @@ interface CardProps {
   description?: string;
   children?: React.ReactNode;
   onPress?: () => void;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  accessibilityLabel?: string;
 }
 
 const springConfig: WithSpringConfig = {
@@ -53,6 +54,7 @@ export function Card({
   children,
   onPress,
   style,
+  accessibilityLabel,
 }: CardProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -76,10 +78,13 @@ export function Card({
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      accessibilityLabel={accessibilityLabel}
       style={[
         styles.card,
         {
           backgroundColor: cardBackgroundColor,
+          borderColor: theme.border,
+          borderWidth: 1,
         },
         animatedStyle,
         style,
@@ -112,3 +117,5 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
 });
+
+export default Card;

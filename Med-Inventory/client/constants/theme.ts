@@ -5,52 +5,78 @@ const primaryBlueDark = "#3B82F6";
 
 export const Colors = {
   light: {
-    text: "#111827",
-    textSecondary: "#6B7280",
+    text: "#0F172A", // Dark Slate 900
+    textSecondary: "#475569", // Slate 600 - High contrast WCAG AAA
+    textMuted: "#64748B", // Slate 500
     buttonText: "#FFFFFF",
-    tabIconDefault: "#6B7280",
+    tabIconDefault: "#64748B",
     tabIconSelected: primaryBlue,
     link: primaryBlue,
-    backgroundRoot: "#F9FAFB",
-    backgroundDefault: "#FFFFFF",
-    backgroundSecondary: "#F3F4F6",
-    backgroundTertiary: "#E5E7EB",
-    border: "#E5E7EB",
+    backgroundRoot: "#F8FAFC", // Slate 50
+    backgroundDefault: "#FFFFFF", // Pure White
+    backgroundSecondary: "#F1F5F9", // Slate 100
+    backgroundTertiary: "#E2E8F0", // Slate 200
+    border: "#E2E8F0", // Slate 200
+    borderStrong: "#CBD5E1", // Slate 300
     primary: primaryBlue,
     primaryHover: "#1D4ED8",
-    primaryLight: "#DBEAFE",
-    success: "#10B981",
-    successLight: "#D1FAE5",
-    warning: "#F59E0B",
-    warningLight: "#FEF3C7",
-    danger: "#EF4444",
-    dangerLight: "#FEE2E2",
-    info: "#3B82F6",
-    infoLight: "#DBEAFE",
+    primaryLight: "#EFF6FF", // Blue 50
+    success: "#16A34A", // Green 600
+    successLight: "#DCFCE7", // Green 100
+    warning: "#D97706", // Amber 600
+    warningLight: "#FEF3C7", // Amber 100
+    danger: "#DC2626", // Red 600
+    dangerLight: "#FEE2E2", // Red 100
+    info: "#0284C7", // Sky 600
+    infoLight: "#E0F2FE", // Sky 100
+    textTertiary: "#64748B",
+    error: "#DC2626",
+    badgeSuccessBg: "#DCFCE7",
+    badgeSuccessBorder: "#86EFAC",
+    badgeSuccessText: "#166534",
+    badgeWarningBg: "#FEF3C7",
+    badgeWarningBorder: "#FDE68A",
+    badgeWarningText: "#92400E",
+    badgeDangerBg: "#FEE2E2",
+    badgeDangerBorder: "#FECACA",
+    badgeDangerText: "#991B1B",
   },
   dark: {
-    text: "#F9FAFB",
-    textSecondary: "#9CA3AF",
+    text: "#F8FAFC",
+    textSecondary: "#94A3B8",
+    textMuted: "#64748B",
+    textTertiary: "#64748B",
     buttonText: "#FFFFFF",
-    tabIconDefault: "#6B7280",
+    tabIconDefault: "#94A3B8",
     tabIconSelected: primaryBlueDark,
     link: primaryBlueDark,
-    backgroundRoot: "#111827",
-    backgroundDefault: "#1F2937",
-    backgroundSecondary: "#374151",
-    backgroundTertiary: "#4B5563",
-    border: "#374151",
+    backgroundRoot: "#0F172A",
+    backgroundDefault: "#1E293B",
+    backgroundSecondary: "#334155",
+    backgroundTertiary: "#475569",
+    border: "#334155",
+    borderStrong: "#475569",
     primary: primaryBlueDark,
     primaryHover: "#2563EB",
     primaryLight: "#1E3A5F",
-    success: "#10B981",
+    success: "#16A34A",
     successLight: "#064E3B",
-    warning: "#F59E0B",
+    warning: "#D97706",
     warningLight: "#78350F",
-    danger: "#EF4444",
+    danger: "#DC2626",
     dangerLight: "#7F1D1D",
-    info: "#3B82F6",
+    error: "#EF4444",
+    info: "#0284C7",
     infoLight: "#1E3A5F",
+    badgeSuccessBg: "#064E3B",
+    badgeSuccessBorder: "#047857",
+    badgeSuccessText: "#6EE7B7",
+    badgeWarningBg: "#78350F",
+    badgeWarningBorder: "#B45309",
+    badgeWarningText: "#FDE68A",
+    badgeDangerBg: "#7F1D1D",
+    badgeDangerBorder: "#B91C1C",
+    badgeDangerText: "#FCA5A5",
   },
 };
 

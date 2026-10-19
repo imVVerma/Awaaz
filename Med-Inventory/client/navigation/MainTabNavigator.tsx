@@ -4,15 +4,19 @@ import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Platform, StyleSheet } from "react-native";
 import DashboardStackNavigator from "@/navigation/DashboardStackNavigator";
+import OrdersStackNavigator from "@/navigation/OrdersStackNavigator";
+import PurchasesStackNavigator from "@/navigation/PurchasesStackNavigator";
+import CustomersStackNavigator from "@/navigation/CustomersStackNavigator";
 import ProductsStackNavigator from "@/navigation/ProductsStackNavigator";
-import CompaniesStackNavigator from "@/navigation/CompaniesStackNavigator";
 import ReportsStackNavigator from "@/navigation/ReportsStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 
 export type MainTabParamList = {
   DashboardTab: undefined;
+  OrdersTab: undefined;
+  PurchasesTab: undefined;
+  CustomersTab: undefined;
   ProductsTab: undefined;
-  CompaniesTab: undefined;
   ReportsTab: undefined;
 };
 
@@ -32,9 +36,18 @@ export default function MainTabNavigator() {
           backgroundColor: Platform.select({
             ios: "transparent",
             android: theme.backgroundDefault,
+            web: theme.backgroundDefault,
           }),
-          borderTopWidth: 0,
-          elevation: 0,
+          borderTopWidth: 1,
+          borderTopColor: theme.border,
+          elevation: 4,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 6,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "600",
         },
         tabBarBackground: () =>
           Platform.OS === "ios" ? (
@@ -58,22 +71,42 @@ export default function MainTabNavigator() {
         }}
       />
       <Tab.Screen
+        name="OrdersTab"
+        component={OrdersStackNavigator}
+        options={{
+          title: "Sales",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="file-text" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="PurchasesTab"
+        component={PurchasesStackNavigator}
+        options={{
+          title: "Purchases",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="truck" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="CustomersTab"
+        component={CustomersStackNavigator}
+        options={{
+          title: "Customers",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="users" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
         name="ProductsTab"
         component={ProductsStackNavigator}
         options={{
           title: "Products",
           tabBarIcon: ({ color, size }) => (
             <Feather name="package" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="CompaniesTab"
-        component={CompaniesStackNavigator}
-        options={{
-          title: "Companies",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="briefcase" size={size} color={color} />
           ),
         }}
       />

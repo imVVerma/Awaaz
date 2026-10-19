@@ -24,7 +24,14 @@ export function StatCard({
 
   const content = (
     <View
-      style={[styles.container, { backgroundColor: theme.backgroundDefault }]}
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.backgroundDefault,
+          borderColor: theme.border,
+          borderWidth: 1,
+        },
+      ]}
     >
       <View style={styles.header}>
         <View style={[styles.iconContainer, { backgroundColor: color + "20" }]}>

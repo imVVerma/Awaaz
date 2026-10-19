@@ -30,6 +30,8 @@ export function CompanyListItem({
         styles.container,
         {
           backgroundColor: theme.backgroundDefault,
+          borderColor: theme.border,
+          borderWidth: 1,
           opacity: pressed && onPress ? 0.8 : 1,
         },
       ]}
@@ -137,6 +139,10 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
   },
   actionButton: {
-    padding: Spacing.xs,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
